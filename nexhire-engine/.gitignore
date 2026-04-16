@@ -1,0 +1,4 @@
+engine
+*.exe
+vendor/
+.env

@@ -1,0 +1,3 @@
+export interface Round { id: string; name: string; type: "aptitude" | "technical" | "hr" | "group_discussion" | "coding"; date?: string; description?: string; }
+export interface Drive { id: string; title: string; companyId: string; companyName: string; companyLogo?: string; description: string; branches: string[]; minCgpa: number; maxBacklogs: number; packageLpa: number; startDate: string; endDate: string; rounds: Round[]; status: "draft" | "active" | "closed" | "completed"; applicationsCount: number; createdAt: string; }
+export interface DriveFilters { status?: string; branch?: string; search?: string; page?: number; limit?: number; }

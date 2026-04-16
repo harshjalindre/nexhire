@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  # ─── MySQL Database ─────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: nexhire-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-password}
+      MYSQL_DATABASE: nexhire
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis Cache ────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: nexhire-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend API (Node.js + Fastify) ────────────────
+  nexhire-api:
+    build:
+      context: ../nexhire-api
+      dockerfile: Dockerfile
+    container_name: nexhire-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://root:${DB_ROOT_PASSWORD:-password}@mysql:3306/nexhire
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey12345678}
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      HOST: "0.0.0.0"
+      NODE_ENV: production
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      ENGINE_GRPC_URL: http://nexhire-engine:50051
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Smart-Match Engine (Go + Fiber) ────────────────
+  nexhire-engine:
+    build:
+      context: ../nexhire-engine
+      dockerfile: Dockerfile
+    container_name: nexhire-engine
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    environment:
+      ENV: production
+      ENGINE_PORT: "50051"
+      DB_USER: root
+      DB_PASSWORD: ${DB_ROOT_PASSWORD:-password}
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: nexhire
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ─── Frontend (React + Nginx) ───────────────────────
+  nexhire-web:
+    build:
+      context: ../nexhire-web
+      dockerfile: Dockerfile
+    container_name: nexhire-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - nexhire-api
+
+volumes:
+  mysql_data:

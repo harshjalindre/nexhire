@@ -1,0 +1,17 @@
+syntax = "proto3";
+package nexhire.v1;
+option go_package = "github.com/nexhire/engine/proto/v1";
+
+service MatchService {
+  rpc MatchStudents(MatchStudentsRequest) returns (MatchStudentsResponse);
+  rpc GenerateReport(ReportRequest) returns (ReportResponse);
+  rpc ProcessBulkUpload(BulkUploadRequest) returns (BulkUploadResponse);
+}
+
+message MatchStudentsRequest { string tenant_id = 1; string drive_id = 2; }
+message MatchStudentsResponse { string drive_id = 1; int32 total_found = 2; int32 eligible = 3; int64 processed_ms = 4; repeated MatchResult results = 5; }
+message MatchResult { string student_id = 1; string name = 2; string branch = 3; double cgpa = 4; double match_score = 5; int32 skill_match_count = 6; bool eligible = 7; }
+message ReportRequest { string tenant_id = 1; string drive_id = 2; string type = 3; }
+message ReportResponse { string url = 1; string filename = 2; int64 size_bytes = 3; }
+message BulkUploadRequest { string tenant_id = 1; bytes csv_data = 2; string upload_type = 3; }
+message BulkUploadResponse { int32 total_rows = 1; int32 success = 2; int32 failed = 3; repeated string errors = 4; }

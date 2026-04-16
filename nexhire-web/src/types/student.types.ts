@@ -1,0 +1,2 @@
+export interface Student { id: string; userId: string; name: string; email: string; avatar?: string; branch: string; year: number; cgpa: number; backlogs: number; skills: string[]; placementStatus: "unplaced" | "placed" | "opted_out"; profileCompletion: number; createdAt: string; }
+export interface StudentFilters { branch?: string; year?: number; placementStatus?: string; search?: string; page?: number; limit?: number; }

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env.local
+*.tsbuildinfo
+dev-dist/
+sw.js
+workbox-*.js
+.DS_Store

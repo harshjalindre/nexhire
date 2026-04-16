@@ -1,0 +1,1 @@
+export interface TenantDetail { id: string; name: string; code: string; adminEmail: string; logo?: string; tier: "basic" | "premium" | "enterprise"; studentsCount: number; drivesCount: number; status: "active" | "inactive"; createdAt: string; }

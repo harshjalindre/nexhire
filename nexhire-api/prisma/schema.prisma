@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Multi-Tenant Core ─────────────────────────────
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique @db.VarChar(10)
+  logo      String?
+  tier      String   @default("basic") @db.VarChar(20)
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+  companies Company[]
+  drives    Drive[]
+  students  Student[]
+  @@map("tenants")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  email     String
+  password  String
+  role      String   @db.VarChar(20)
+  avatar    String?
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  student       Student?
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+model Student {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  tenantId          String   @map("tenant_id")
+  branch            String   @db.VarChar(100)
+  year              Int
+  cgpa              Float
+  backlogs          Int      @default(0)
+  skills            Json     @default("[]")
+  resumeUrl         String?  @map("resume_url")
+  placementStatus   String   @default("unplaced") @map("placement_status") @db.VarChar(20)
+  profileCompletion Int      @default(0) @map("profile_completion")
+  profileData       Json?    @map("profile_data")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id])
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  applications Application[]
+  @@index([tenantId])
+  @@index([tenantId, branch])
+  @@index([tenantId, placementStatus])
+  @@map("students")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  industry    String   @db.VarChar(100)
+  website     String?
+  logo        String?
+  description String?  @db.Text
+  contactName String   @map("contact_name")
+  contactEmail String  @map("contact_email")
+  contactPhone String? @map("contact_phone")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant Tenant  @relation(fields: [tenantId], references: [id])
+  drives Drive[]
+  @@index([tenantId])
+  @@map("companies")
+}
+
+model Drive {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  companyId   String   @map("company_id")
+  title       String
+  description String   @db.Text
+  branches    Json     @default("[]")
+  minCgpa     Float    @map("min_cgpa")
+  maxBacklogs Int      @map("max_backlogs")
+  packageLpa  Float    @map("package_lpa")
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  rounds      Json     @default("[]")
+  status      String   @default("draft") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  company      Company       @relation(fields: [companyId], references: [id])
+  applications Application[]
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("drives")
+}
+
+model Application {
+  id           String   @id @default(uuid())
+  driveId      String   @map("drive_id")
+  studentId    String   @map("student_id")
+  status       String   @default("applied") @db.VarChar(20)
+  roundStatuses Json    @default("[]") @map("round_statuses")
+  appliedAt    DateTime @default(now()) @map("applied_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  drive   Drive   @relation(fields: [driveId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+  @@unique([driveId, studentId])
+  @@index([studentId])
+  @@index([driveId, status])
+  @@map("applications")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   @db.VarChar(30)
+  title     String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id])
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(50)
+  entityId  String?  @map("entity_id")
+  meta      Json?
+  ip        String?  @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id])
+  @@index([userId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
