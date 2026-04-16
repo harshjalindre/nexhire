@@ -11,8 +11,11 @@ export async function companyRoutes(fastify: FastifyInstance) {
   fastify.addHook("onRequest", fastify.tenantGuard);
 
   fastify.get("/", async (req, reply) => {
+    const query = req.query as Record<string, string>;
     const pagination = getPagination(req);
-    const [data, total] = await Promise.all([prisma.company.findMany({ where: { tenantId: req.tenantId }, include: { _count: { select: { drives: true } } }, orderBy: { createdAt: "desc" }, skip: pagination.skip, take: pagination.limit }), prisma.company.count({ where: { tenantId: req.tenantId } })]);
+    const where: Record<string, unknown> = { tenantId: req.tenantId };
+    if (query.search) where.OR = [{ name: { contains: query.search, mode: "insensitive" } }, { industry: { contains: query.search, mode: "insensitive" } }, { contactEmail: { contains: query.search, mode: "insensitive" } }];
+    const [data, total] = await Promise.all([prisma.company.findMany({ where, include: { _count: { select: { drives: true } } }, orderBy: { createdAt: "desc" }, skip: pagination.skip, take: pagination.limit }), prisma.company.count({ where })]);
     const mapped = data.map((c) => ({ id: c.id, name: c.name, industry: c.industry, website: c.website, logo: c.logo, description: c.description, contact: { name: c.contactName, email: c.contactEmail, phone: c.contactPhone }, drivesCount: c._count.drives, createdAt: c.createdAt.toISOString() }));
     return reply.send(paginatedResponse(mapped, total, pagination));
   });

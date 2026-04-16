@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, GraduationCap, Briefcase, Users, FileText, Settings } from "lucide-react";
+import { LayoutDashboard, Building2, GraduationCap, Briefcase, Users, FileText, Settings, Shield, CreditCard } from "lucide-react";
 
 export enum Role {
   SUPER_ADMIN = "super_admin",
@@ -10,6 +10,7 @@ export const NAV_ITEMS = {
   [Role.SUPER_ADMIN]: [
     { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
     { label: "Tenants", path: "/admin/tenants", icon: Building2 },
+    { label: "Audit Trail", path: "/admin/audit", icon: Shield },
     { label: "Settings", path: "/settings", icon: Settings },
   ],
   [Role.COLLEGE_ADMIN]: [
@@ -17,6 +18,8 @@ export const NAV_ITEMS = {
     { label: "Drives", path: "/college/drives", icon: Briefcase },
     { label: "Companies", path: "/college/companies", icon: Building2 },
     { label: "Students", path: "/college/students", icon: GraduationCap },
+    { label: "Audit Trail", path: "/college/audit", icon: Shield },
+    { label: "Billing", path: "/college/billing", icon: CreditCard },
     { label: "Settings", path: "/settings", icon: Settings },
   ],
   [Role.STUDENT]: [

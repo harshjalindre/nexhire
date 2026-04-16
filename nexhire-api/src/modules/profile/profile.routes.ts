@@ -1,6 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../../config/prisma.js";
+import { promises as fs } from "fs";
+import path from "path";
 
 const updateProfileSchema = z.object({ name: z.string().min(2).optional(), branch: z.string().optional(), year: z.number().int().min(1).max(5).optional(), cgpa: z.number().min(0).max(10).optional(), backlogs: z.number().int().min(0).optional(), skills: z.array(z.string()).optional() });
 
@@ -34,7 +36,18 @@ export async function profileRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post("/resume", async (req, reply) => {
-    const student = await prisma.student.update({ where: { userId: req.currentUser.id }, data: { resumeUrl: `/uploads/resumes/${req.currentUser.id}.pdf` } });
+    const data = await req.file();
+    if (!data) return reply.code(400).send({ message: "No file uploaded" });
+    const ext = path.extname(data.filename).toLowerCase();
+    if (![".pdf", ".doc", ".docx"].includes(ext)) return reply.code(400).send({ message: "Only PDF, DOC, DOCX files are allowed" });
+    const uploadsDir = path.join(process.cwd(), "uploads", "resumes");
+    await fs.mkdir(uploadsDir, { recursive: true });
+    const fileName = `${req.currentUser.id}-${Date.now()}${ext}`;
+    const filePath = path.join(uploadsDir, fileName);
+    const buffer = await data.toBuffer();
+    await fs.writeFile(filePath, buffer);
+    const resumeUrl = `/uploads/resumes/${fileName}`;
+    const student = await prisma.student.update({ where: { userId: req.currentUser.id }, data: { resumeUrl } });
     return reply.send({ message: "Resume uploaded", resumeUrl: student.resumeUrl });
   });
 }

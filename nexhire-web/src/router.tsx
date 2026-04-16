@@ -21,6 +21,8 @@ const ProfilePage = lazy(() => import("@/pages/student/ProfilePage"));
 const ResumePage = lazy(() => import("@/pages/student/ResumePage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const AuditTrailPage = lazy(() => import("@/pages/college/AuditTrailPage"));
+const BillingPage = lazy(() => import("@/pages/college/BillingPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
@@ -41,10 +43,13 @@ export const router = createBrowserRouter([
     children: [
       { path: "/admin", element: <RoleGuard allowedRoles={[Role.SUPER_ADMIN]}><Lazy><AdminDashboard /></Lazy></RoleGuard> },
       { path: "/admin/tenants", element: <RoleGuard allowedRoles={[Role.SUPER_ADMIN]}><Lazy><TenantManagement /></Lazy></RoleGuard> },
+      { path: "/admin/audit", element: <RoleGuard allowedRoles={[Role.SUPER_ADMIN]}><Lazy><AuditTrailPage /></Lazy></RoleGuard> },
       { path: "/college", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><CollegeDashboard /></Lazy></RoleGuard> },
       { path: "/college/drives", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><DriveManagement /></Lazy></RoleGuard> },
       { path: "/college/companies", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><CompanyManagement /></Lazy></RoleGuard> },
       { path: "/college/students", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><StudentManagement /></Lazy></RoleGuard> },
+      { path: "/college/audit", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><AuditTrailPage /></Lazy></RoleGuard> },
+      { path: "/college/billing", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><BillingPage /></Lazy></RoleGuard> },
       { path: "/student", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><StudentDashboard /></Lazy></RoleGuard> },
       { path: "/student/drives", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><DriveListingPage /></Lazy></RoleGuard> },
       { path: "/student/applications", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ApplicationsPage /></Lazy></RoleGuard> },

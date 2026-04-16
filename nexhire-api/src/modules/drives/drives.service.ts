@@ -6,7 +6,7 @@ import { v4 as uuid } from "uuid";
 export async function getDrives(tenantId: string, filters: { status?: string; branch?: string; search?: string; skip: number; limit: number }) {
   const where: Record<string, unknown> = { tenantId };
   if (filters.status) where.status = filters.status;
-  if (filters.search) where.title = { contains: filters.search };
+  if (filters.search) where.OR = [{ title: { contains: filters.search, mode: "insensitive" } }, { company: { name: { contains: filters.search, mode: "insensitive" } } }];
   const [data, total] = await Promise.all([prisma.drive.findMany({ where, include: { company: { select: { name: true, logo: true } }, _count: { select: { applications: true } } }, orderBy: { createdAt: "desc" }, skip: filters.skip, take: filters.limit }), prisma.drive.count({ where })]);
   return { data: data.map((d) => ({ ...d, companyName: d.company.name, companyLogo: d.company.logo, applicationsCount: d._count.applications })), total };
 }

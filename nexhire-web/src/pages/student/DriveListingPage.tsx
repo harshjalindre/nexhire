@@ -10,13 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDrives, useApplyToDrive } from "@/features/drives/hooks/useDrives";
 import { SkeletonCardGrid, SkeletonListRows } from "@/components/shared/Skeletons";
+import { Pagination } from "@/components/shared/Pagination";
 import { formatDate } from "@/lib/utils";
 
 export default function DriveListingPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search);
-  const { data, isLoading } = useDrives({ search: debouncedSearch, status: "active" });
+  const { data, isLoading } = useDrives({ search: debouncedSearch, status: "active", page, limit: 9 });
   const applyMutation = useApplyToDrive();
   const drives = data?.data || [];
   return (
@@ -31,7 +33,9 @@ export default function DriveListingPage() {
           {viewMode === "grid" && (<><div className="flex flex-wrap gap-1.5 mb-3">{drive.branches.slice(0, 3).map(b => <Badge key={b} variant="outline" className="text-[10px]">{b}</Badge>)}</div><div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-4"><span className="flex items-center gap-1"><IndianRupee className="h-3 w-3" />{drive.packageLpa} LPA</span><span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(drive.endDate)}</span><span className="flex items-center gap-1"><Clock className="h-3 w-3" />{drive.rounds.length} rounds</span><span>CGPA ≥ {drive.minCgpa}</span></div></>)}
           <Button size={viewMode === "list" ? "sm" : "default"} className={viewMode === "grid" ? "w-full" : ""} onClick={() => applyMutation.mutate(drive.id)} disabled={applyMutation.isPending}>Apply Now</Button>
         </CardContent></Card></FadeIn>
-      ))}</div>)}
+      ))}</div>
+      <Pagination page={page} totalPages={data?.totalPages || 1} total={data?.total} pageSize={9} onPageChange={(p) => setPage(p)} />
+      )}
     </div>
   );
 }

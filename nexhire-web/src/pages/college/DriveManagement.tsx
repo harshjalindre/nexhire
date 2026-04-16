@@ -18,6 +18,7 @@ import { useDrives, useCreateDrive, useUpdateDrive, useDeleteDrive } from "@/fea
 import { useCompanies } from "@/features/companies/hooks/useCompanies";
 import { driveFormSchema, type DriveFormData } from "@/features/drives/schemas/drive.schema";
 import { SkeletonCardGrid } from "@/components/shared/Skeletons";
+import { Pagination } from "@/components/shared/Pagination";
 import { formatDate } from "@/lib/utils";
 import { BRANCHES } from "@/lib/constants";
 import type { Drive } from "@/types/drive.types";
@@ -25,12 +26,13 @@ import type { Drive } from "@/types/drive.types";
 export default function DriveManagement() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Drive | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Drive | null>(null);
 
   const debouncedSearch = useDebounce(search);
-  const { data, isLoading } = useDrives({ status: statusFilter === "all" ? undefined : statusFilter, search: debouncedSearch });
+  const { data, isLoading } = useDrives({ status: statusFilter === "all" ? undefined : statusFilter, search: debouncedSearch, page, limit: 9 });
   const { data: companiesData } = useCompanies();
   const createMutation = useCreateDrive();
   const updateMutation = useUpdateDrive();
@@ -80,6 +82,7 @@ export default function DriveManagement() {
             ))}</div>)}
           </TabsContent>
         </Tabs>
+        <Pagination page={page} totalPages={data?.totalPages || 1} total={data?.total} pageSize={9} onPageChange={(p) => setPage(p)} />
       </FadeIn>
 
       {/* Create / Edit Dialog */}
