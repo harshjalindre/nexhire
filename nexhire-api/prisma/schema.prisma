@@ -17,10 +17,11 @@ model Tenant {
   status    String   @default("active") @db.VarChar(20)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  users     User[]
-  companies Company[]
-  drives    Drive[]
-  students  Student[]
+  users        User[]
+  companies    Company[]
+  drives       Drive[]
+  students     Student[]
+  subscription Subscription?
   @@map("tenants")
 }
 
@@ -33,7 +34,14 @@ model User {
   role      String   @db.VarChar(20)
   avatar    String?
   status    String   @default("active") @db.VarChar(20)
-  createdAt DateTime @default(now()) @map("created_at")
+  resetToken        String?   @map("reset_token")
+  resetTokenExpiry  DateTime? @map("reset_token_expiry")
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  verifyToken       String?   @map("verify_token")
+  failedLogins      Int       @default(0) @map("failed_logins")
+  lockedUntil       DateTime? @map("locked_until")
+  refreshToken      String?   @map("refresh_token")
+  createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   tenant        Tenant         @relation(fields: [tenantId], references: [id])
   student       Student?
@@ -154,4 +162,43 @@ model AuditLog {
   @@index([userId])
   @@index([entity, entityId])
   @@map("audit_logs")
+}
+
+model Subscription {
+  id            String   @id @default(uuid())
+  tenantId      String   @unique @map("tenant_id")
+  planId        String   @map("plan_id") @db.VarChar(20)
+  status        String   @default("active") @db.VarChar(20)
+  currentPeriodStart DateTime @map("current_period_start")
+  currentPeriodEnd   DateTime @map("current_period_end")
+  cancelledAt   DateTime? @map("cancelled_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  invoices      Invoice[]
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id              String   @id @default(uuid())
+  subscriptionId  String   @map("subscription_id")
+  amount          Float
+  currency        String   @default("INR") @db.VarChar(3)
+  status          String   @default("paid") @db.VarChar(20)
+  paidAt          DateTime? @map("paid_at")
+  invoiceNumber   String   @unique @map("invoice_number")
+  createdAt       DateTime @default(now()) @map("created_at")
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id])
+  @@map("invoices")
+}
+
+model UsageLog {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  metric    String   @db.VarChar(50)
+  count     Int      @default(0)
+  month     String   @db.VarChar(7)
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([tenantId, metric, month])
+  @@map("usage_logs")
 }
