@@ -18,6 +18,7 @@ import { useDrives, useCreateDrive, useUpdateDrive, useDeleteDrive } from "@/fea
 import { useCompanies } from "@/features/companies/hooks/useCompanies";
 import { driveFormSchema, type DriveFormData } from "@/features/drives/schemas/drive.schema";
 import { SkeletonCardGrid } from "@/components/shared/Skeletons";
+import { Pagination } from "@/components/shared/Pagination";
 import { formatDate } from "@/lib/utils";
 import { BRANCHES } from "@/lib/constants";
 import type { Drive } from "@/types/drive.types";
@@ -25,12 +26,13 @@ import type { Drive } from "@/types/drive.types";
 export default function DriveManagement() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Drive | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Drive | null>(null);
 
   const debouncedSearch = useDebounce(search);
-  const { data, isLoading } = useDrives({ status: statusFilter === "all" ? undefined : statusFilter, search: debouncedSearch });
+  const { data, isLoading } = useDrives({ status: statusFilter === "all" ? undefined : statusFilter, search: debouncedSearch, page, limit: 9 });
   const { data: companiesData } = useCompanies();
   const createMutation = useCreateDrive();
   const updateMutation = useUpdateDrive();
@@ -61,10 +63,10 @@ export default function DriveManagement() {
     <div className="space-y-6">
       <FadeIn><PageHeader title="Drive Management" description="Create and manage placement drives" actions={<Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Create Drive</Button>} /></FadeIn>
       <FadeIn delay={0.1}>
-        <Tabs defaultValue="all" onValueChange={setStatusFilter}>
+        <Tabs defaultValue="all" onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <TabsList><TabsTrigger value="all">All</TabsTrigger><TabsTrigger value="active">Active</TabsTrigger><TabsTrigger value="draft">Draft</TabsTrigger><TabsTrigger value="closed">Closed</TabsTrigger></TabsList>
-            <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search drives..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+            <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search drives..." className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
           </div>
           <TabsContent value={statusFilter} className="mt-4">
             {isLoading ? (<SkeletonCardGrid count={6} />
@@ -80,6 +82,7 @@ export default function DriveManagement() {
             ))}</div>)}
           </TabsContent>
         </Tabs>
+        <Pagination page={page} totalPages={data?.totalPages || 1} total={data?.total} pageSize={9} onPageChange={(p) => setPage(p)} />
       </FadeIn>
 
       {/* Create / Edit Dialog */}

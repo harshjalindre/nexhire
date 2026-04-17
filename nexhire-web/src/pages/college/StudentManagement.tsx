@@ -11,11 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useStudents } from "@/features/students/hooks/useStudents";
 import { SkeletonListRows } from "@/components/shared/Skeletons";
+import { Pagination } from "@/components/shared/Pagination";
 
 export default function StudentManagement() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search);
-  const { data, isLoading } = useStudents({ search: debouncedSearch });
+  const { data, isLoading } = useStudents({ search: debouncedSearch, page, limit: 10 });
   const students = data?.data || [];
   const statusColors: Record<string, "success" | "secondary" | "warning"> = { placed: "success", unplaced: "secondary", opted_out: "warning" };
   return (
@@ -29,7 +31,9 @@ export default function StudentManagement() {
           <div className="flex items-center gap-3 flex-1 min-w-0"><div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">{student.name.split(" ").map(n => n[0]).join("").slice(0, 2)}</div><div className="min-w-0"><p className="font-medium truncate">{student.name}</p><p className="text-xs text-muted-foreground truncate">{student.email}</p></div></div>
           <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm"><div><span className="text-muted-foreground text-xs">Branch:</span><p className="font-medium text-xs">{student.branch}</p></div><div><span className="text-muted-foreground text-xs">CGPA:</span><p className="font-medium text-xs">{student.cgpa}</p></div><div className="w-24"><span className="text-muted-foreground text-xs">Profile</span><Progress value={student.profileCompletion} className="h-1.5 mt-1" /></div><Badge variant={statusColors[student.placementStatus] || "secondary"} className="text-[10px]">{student.placementStatus.replace("_", " ")}</Badge></div>
         </div></CardContent></Card></FadeIn>
-      ))}</div>)}
+      ))}</div>
+      <Pagination page={page} totalPages={data?.totalPages || 1} total={data?.total} pageSize={10} onPageChange={(p) => setPage(p)} />
+      )}
     </div>
   );
 }
