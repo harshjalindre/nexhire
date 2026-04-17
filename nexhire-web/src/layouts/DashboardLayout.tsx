@@ -3,6 +3,7 @@ import { Outlet, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Topbar } from "@/components/shared/Topbar";
+import { CookieConsent } from "@/components/shared/CookieConsent";
 import { useAuthStore } from "@/stores/authStore";
 
 export function DashboardLayout() {
@@ -20,6 +21,7 @@ export function DashboardLayout() {
         <Topbar onMenuClick={() => setMobileOpen(!mobileOpen)} />
         <main className="p-4 lg:p-6 min-h-[calc(100vh-4rem)]"><div className="mx-auto max-w-7xl"><Outlet /></div></main>
       </div>
+      <CookieConsent />
     </div>
   );
 }

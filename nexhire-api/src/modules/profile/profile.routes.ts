@@ -50,4 +50,15 @@ export async function profileRoutes(fastify: FastifyInstance) {
     const student = await prisma.student.update({ where: { userId: req.currentUser.id }, data: { resumeUrl } });
     return reply.send({ message: "Resume uploaded", resumeUrl: student.resumeUrl });
   });
+
+  // GDPR data export
+  fastify.get("/export", async (req, reply) => {
+    const user = await prisma.user.findUnique({ where: { id: req.currentUser.id }, select: { id: true, name: true, email: true, role: true, createdAt: true } });
+    const student = await prisma.student.findUnique({ where: { userId: req.currentUser.id }, include: { applications: { include: { drive: { select: { title: true, company: { select: { name: true } } } } } } } });
+    const notifications = await prisma.notification.findMany({ where: { userId: req.currentUser.id } });
+    const auditLogs = await prisma.auditLog.findMany({ where: { userId: req.currentUser.id }, orderBy: { createdAt: "desc" }, take: 100 });
+    reply.header("Content-Type", "application/json");
+    reply.header("Content-Disposition", "attachment; filename=my-data-export.json");
+    return reply.send({ exportDate: new Date().toISOString(), user, student, notifications, auditLogs });
+  });
 }

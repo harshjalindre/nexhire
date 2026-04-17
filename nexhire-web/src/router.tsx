@@ -23,19 +23,27 @@ const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const AuditTrailPage = lazy(() => import("@/pages/college/AuditTrailPage"));
 const BillingPage = lazy(() => import("@/pages/college/BillingPage"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
+const TenantSignupPage = lazy(() => import("@/pages/auth/TenantSignupPage"));
+const TermsPage = lazy(() => import("@/pages/legal/TermsPage"));
+const PrivacyPage = lazy(() => import("@/pages/legal/PrivacyPage"));
+const RecruiterDashboard = lazy(() => import("@/pages/recruiter/RecruiterDashboard"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
 }
 
 export const router = createBrowserRouter([
-  { path: "/", element: <Navigate to="/auth/login" replace /> },
+  { path: "/", element: <Lazy><LandingPage /></Lazy> },
+  { path: "/terms", element: <Lazy><TermsPage /></Lazy> },
+  { path: "/privacy", element: <Lazy><PrivacyPage /></Lazy> },
   {
     path: "/auth",
     element: <AuthLayout />,
     children: [
       { path: "login", element: <Lazy><LoginPage /></Lazy> },
       { path: "signup", element: <Lazy><SignupPage /></Lazy> },
+      { path: "signup/tenant", element: <Lazy><TenantSignupPage /></Lazy> },
     ],
   },
   {
@@ -55,6 +63,9 @@ export const router = createBrowserRouter([
       { path: "/student/applications", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ApplicationsPage /></Lazy></RoleGuard> },
       { path: "/student/profile", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ProfilePage /></Lazy></RoleGuard> },
       { path: "/student/resume", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ResumePage /></Lazy></RoleGuard> },
+      { path: "/recruiter", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><RecruiterDashboard /></Lazy></RoleGuard> },
+      { path: "/recruiter/drives", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><DriveManagement /></Lazy></RoleGuard> },
+      { path: "/recruiter/applications", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><ApplicationsPage /></Lazy></RoleGuard> },
       { path: "/notifications", element: <Lazy><NotificationsPage /></Lazy> },
       { path: "/settings", element: <Lazy><SettingsPage /></Lazy> },
     ],

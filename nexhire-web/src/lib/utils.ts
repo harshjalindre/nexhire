@@ -18,6 +18,6 @@ export function getInitials(name: string): string {
 }
 
 export function getRoleDashboardPath(role: string): string {
-  const map: Record<string, string> = { super_admin: "/admin", college_admin: "/college", student: "/student" };
+  const map: Record<string, string> = { super_admin: "/admin", college_admin: "/college", student: "/student", recruiter: "/recruiter" };
   return map[role] || "/student";
 }

@@ -1,0 +1,87 @@
+name: NexHire CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  api-lint-test:
+    name: API — Lint & Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nexhire_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: nexhire-api/package-lock.json
+      - name: Install deps
+        working-directory: nexhire-api
+        run: npm ci
+      - name: Generate Prisma client
+        working-directory: nexhire-api
+        run: npx prisma generate
+      - name: Push schema to test DB
+        working-directory: nexhire-api
+        run: npx prisma db push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexhire_test
+      - name: Seed test DB
+        working-directory: nexhire-api
+        run: npx tsx prisma/seed.ts
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexhire_test
+      - name: Run tests
+        working-directory: nexhire-api
+        run: npx vitest run
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexhire_test
+          JWT_SECRET: test-secret
+          JWT_EXPIRES_IN: 7d
+          NODE_ENV: test
+
+  web-build:
+    name: Frontend — Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: nexhire-web/package-lock.json
+      - name: Install deps
+        working-directory: nexhire-web
+        run: npm ci
+      - name: Build
+        working-directory: nexhire-web
+        run: npm run build
+        env:
+          VITE_API_URL: /api
+
+  engine-build:
+    name: Engine — Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Build
+        working-directory: nexhire-engine
+        run: go build -o nexhire-engine ./main.go

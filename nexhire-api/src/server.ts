@@ -33,7 +33,7 @@ declare module "fastify" {
   }
 }
 
-async function buildServer() {
+export async function buildServer() {
   const app = Fastify({ logger: false, trustProxy: true });
   await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true });
   await app.register(helmet, { contentSecurityPolicy: false });
