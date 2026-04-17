@@ -4,7 +4,8 @@ import { prisma } from "../../config/prisma.js";
 import { getPagination, paginatedResponse } from "../../utils/pagination.js";
 import { logAudit } from "../../utils/audit.js";
 
-const companySchema = z.object({ name: z.string().min(2), industry: z.string().min(1), website: z.string().url().optional().or(z.literal("")), description: z.string().optional(), contact: z.object({ name: z.string().min(2), email: z.string().email(), phone: z.string().optional() }) });
+// #20 — Input length validation
+const companySchema = z.object({ name: z.string().min(2).max(100), industry: z.string().min(1).max(100), website: z.string().url().max(500).optional().or(z.literal("")), description: z.string().max(2000).optional(), contact: z.object({ name: z.string().min(2).max(100), email: z.string().email().max(200), phone: z.string().max(20).optional() }) });
 
 export async function companyRoutes(fastify: FastifyInstance) {
   fastify.addHook("onRequest", fastify.authenticate);

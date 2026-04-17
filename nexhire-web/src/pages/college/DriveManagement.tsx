@@ -63,10 +63,10 @@ export default function DriveManagement() {
     <div className="space-y-6">
       <FadeIn><PageHeader title="Drive Management" description="Create and manage placement drives" actions={<Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Create Drive</Button>} /></FadeIn>
       <FadeIn delay={0.1}>
-        <Tabs defaultValue="all" onValueChange={setStatusFilter}>
+        <Tabs defaultValue="all" onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <TabsList><TabsTrigger value="all">All</TabsTrigger><TabsTrigger value="active">Active</TabsTrigger><TabsTrigger value="draft">Draft</TabsTrigger><TabsTrigger value="closed">Closed</TabsTrigger></TabsList>
-            <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search drives..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+            <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search drives..." className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
           </div>
           <TabsContent value={statusFilter} className="mt-4">
             {isLoading ? (<SkeletonCardGrid count={6} />

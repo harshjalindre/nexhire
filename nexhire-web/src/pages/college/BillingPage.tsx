@@ -18,9 +18,9 @@ function useSubscription() { return useQuery({ queryKey: ["subscription"], query
 
 export default function BillingPage() {
   const [checkoutPlan, setCheckoutPlan] = useState<Plan | null>(null);
-  const [cardNumber, setCardNumber] = useState("4242 4242 4242 4242");
-  const [expiry, setExpiry] = useState("12/28");
-  const [cvc, setCvc] = useState("123");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvc, setCvc] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const queryClient = useQueryClient();

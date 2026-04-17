@@ -19,8 +19,12 @@ export default function TenantSignupPage() {
     e.preventDefault();
     setError("");
     if (!form.collegeName || !form.collegeCode || !form.adminName || !form.adminEmail || !form.password) { setError("All fields are required"); return; }
+    if (form.collegeName.length < 2 || form.collegeName.length > 100) { setError("College name must be 2-100 characters"); return; }
     if (form.collegeCode.length < 3 || form.collegeCode.length > 10) { setError("College code must be 3-10 characters"); return; }
-    if (form.password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (!/^[A-Z0-9]+$/.test(form.collegeCode)) { setError("College code must be uppercase letters and numbers only"); return; }
+    if (form.adminName.length < 2 || form.adminName.length > 100) { setError("Name must be 2-100 characters"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.adminEmail)) { setError("Invalid email format"); return; }
+    if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
     try {
       const res = await api.post("/auth/register-tenant", form);

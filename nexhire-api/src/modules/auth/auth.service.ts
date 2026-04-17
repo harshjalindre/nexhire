@@ -12,7 +12,7 @@ export async function loginUser(input: LoginInput) {
   const tenant = await prisma.tenant.findUnique({ where: { code: input.collegeCode } });
   if (!tenant) throw new NotFoundError("College");
   const user = await prisma.user.findUnique({ where: { tenantId_email: { tenantId: tenant.id, email: input.email } } });
-  if (!user) throw new UnauthorizedError("Invalid credentials");
+  if (!user) throw new UnauthorizedError("Invalid email or password");
 
   // Account lockout check
   if (user.lockedUntil && user.lockedUntil > new Date()) {
@@ -29,15 +29,16 @@ export async function loginUser(input: LoginInput) {
       updates.failedLogins = 0;
     }
     await prisma.user.update({ where: { id: user.id }, data: updates });
-    throw new UnauthorizedError(failedLogins >= MAX_FAILED_LOGINS ? `Too many failed attempts. Account locked for ${LOCKOUT_MINUTES} minutes.` : "Invalid credentials");
+    throw new UnauthorizedError(failedLogins >= MAX_FAILED_LOGINS ? `Too many failed attempts. Account locked for ${LOCKOUT_MINUTES} minutes.` : "Invalid email or password");
   }
 
   // Reset failed login count on success
   if (user.failedLogins > 0) await prisma.user.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } });
 
-  // Generate refresh token
+  // Generate refresh token (store hash, return raw)
   const refreshToken = crypto.randomBytes(40).toString("hex");
-  await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
+  const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+  await prisma.user.update({ where: { id: user.id }, data: { refreshToken: refreshTokenHash } });
 
   return { user: { id: user.id, name: user.name, email: user.email, role: user.role, tenantId: user.tenantId, emailVerified: user.emailVerified }, tenant: { id: tenant.id, name: tenant.name, code: tenant.code, logo: tenant.logo }, refreshToken };
 }
@@ -48,7 +49,7 @@ export async function signupUser(input: SignupInput) {
   const existing = await prisma.user.findUnique({ where: { tenantId_email: { tenantId: tenant.id, email: input.email } } });
   if (existing) throw new ConflictError("Email already registered for this college");
   const hashedPassword = await bcrypt.hash(input.password, 12);
-  const verifyToken = crypto.randomInt(100000, 999999).toString();
+  const verifyToken = crypto.randomBytes(32).toString("hex");
   const user = await prisma.user.create({ data: { tenantId: tenant.id, name: input.name, email: input.email, password: hashedPassword, role: input.role, verifyToken } });
   if (input.role === "student") { await prisma.student.create({ data: { userId: user.id, tenantId: tenant.id, branch: "", year: 1, cgpa: 0, backlogs: 0, profileCompletion: 10 } }); }
   // Send welcome + verification email
@@ -67,12 +68,15 @@ export async function verifyEmail(userId: string, token: string) {
 }
 
 export async function refreshAccessToken(refreshTokenInput: string) {
-  const user = await prisma.user.findFirst({ where: { refreshToken: refreshTokenInput } });
+  // Compare hashed refresh token
+  const hash = crypto.createHash("sha256").update(refreshTokenInput).digest("hex");
+  const user = await prisma.user.findFirst({ where: { refreshToken: hash } });
   if (!user) throw new UnauthorizedError("Invalid refresh token");
   const tenant = await prisma.tenant.findUnique({ where: { id: user.tenantId } });
-  // Rotate refresh token
+  // Rotate: generate new token, store hash
   const newRefreshToken = crypto.randomBytes(40).toString("hex");
-  await prisma.user.update({ where: { id: user.id }, data: { refreshToken: newRefreshToken } });
+  const newHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
+  await prisma.user.update({ where: { id: user.id }, data: { refreshToken: newHash } });
   return { user: { id: user.id, name: user.name, email: user.email, role: user.role, tenantId: user.tenantId, emailVerified: user.emailVerified }, tenant: tenant ? { id: tenant.id, name: tenant.name, code: tenant.code, logo: tenant.logo } : null, refreshToken: newRefreshToken };
 }
 
@@ -81,7 +85,7 @@ export async function forgotPassword(email: string, collegeCode: string) {
   if (!tenant) throw new NotFoundError("College");
   const user = await prisma.user.findUnique({ where: { tenantId_email: { tenantId: tenant.id, email } } });
   if (!user) return { message: "If the email exists, a reset code has been sent." };
-  const resetToken = crypto.randomInt(100000, 999999).toString();
+  const resetToken = crypto.randomBytes(32).toString("hex");
   const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
   await prisma.user.update({ where: { id: user.id }, data: { resetToken, resetTokenExpiry } });
   const tmpl = emailTemplates.passwordReset(user.name, resetToken);

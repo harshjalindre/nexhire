@@ -6,10 +6,16 @@ import path from "path";
 
 const updateProfileSchema = z.object({ name: z.string().min(2).optional(), branch: z.string().optional(), year: z.number().int().min(1).max(5).optional(), cgpa: z.number().min(0).max(10).optional(), backlogs: z.number().int().min(0).optional(), skills: z.array(z.string()).optional() });
 
+// #21 — Fix: cgpa:0 is valid, use explicit null/undefined checks
 function calcCompletion(student: Record<string, unknown>): number {
   let score = 10;
-  if (student.branch) score += 15; if (student.cgpa && (student.cgpa as number) > 0) score += 15; if (student.year) score += 10;
-  const skills = student.skills as string[]; if (skills && skills.length > 0) score += 20; if (student.resumeUrl) score += 20; if (student.name) score += 10;
+  if (student.branch && (student.branch as string).length > 0) score += 15;
+  if (student.cgpa !== null && student.cgpa !== undefined && (student.cgpa as number) >= 0) score += 15;
+  if (student.year && (student.year as number) >= 1) score += 10;
+  const skills = student.skills as string[];
+  if (skills && skills.length > 0) score += 20;
+  if (student.resumeUrl) score += 20;
+  if (student.name && (student.name as string).length > 0) score += 10;
   return Math.min(100, score);
 }
 

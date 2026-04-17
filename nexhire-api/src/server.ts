@@ -36,9 +36,15 @@ declare module "fastify" {
 export async function buildServer() {
   const app = Fastify({ logger: false, trustProxy: true });
   await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true });
-  await app.register(helmet, { contentSecurityPolicy: false });
+  // #10 — Enable CSP with sensible defaults
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'", "'unsafe-inline'"], styleSrc: ["'self'", "'unsafe-inline'"], imgSrc: ["'self'", "data:", "blob:"], connectSrc: ["'self'", "ws:", "wss:"] },
+    },
+  });
   await app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
-  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
+  // #32 — Request body size limit
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, fieldSize: 1024 * 100 } });
   await app.register(fastifyStatic, { root: path.join(process.cwd(), "uploads"), prefix: "/uploads/", decorateReply: false });
   await app.register(websocket);
   await app.register(authPlugin);
@@ -65,8 +71,12 @@ export async function buildServer() {
   await app.register(bulkImportRoutes, { prefix: "/api/students" });
   await app.register(auditRoutes, { prefix: "/api/audit-logs" });
 
+  // #4 — WebSocket with JWT auth
   app.register(async function wsRoutes(fastify) {
-    fastify.get("/ws/notifications", { websocket: true }, (socket, _req) => {
+    fastify.get("/ws/notifications", { websocket: true }, (socket, req) => {
+      const token = (req.query as Record<string, string>).token;
+      if (!token) { socket.send(JSON.stringify({ type: "error", message: "Missing token" })); socket.close(); return; }
+      try { fastify.jwt.verify(token); } catch { socket.send(JSON.stringify({ type: "error", message: "Invalid token" })); socket.close(); return; }
       socket.on("message", (msg) => logger.debug({ msg: msg.toString() }, "WS message"));
       socket.send(JSON.stringify({ type: "connected", message: "Welcome to NexHire real-time" }));
     });

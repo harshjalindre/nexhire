@@ -2,15 +2,20 @@ import type { FastifyInstance } from "fastify";
 import { prisma } from "../../config/prisma.js";
 import { logger } from "../../config/logger.js";
 import { sendEmail } from "../../config/email.js";
-import { trackUsage } from "../../middleware/planGate.js";
+import { trackUsage, PLAN_LIMITS } from "../../middleware/planGate.js";
 
+// #16 — Single source of truth: pricing layered on top of PLAN_LIMITS
 const PLANS = [
-  { id: "basic", name: "Basic", price: 0, priceDisplay: "Free", features: ["Up to 100 students", "5 active drives", "Email support", "Basic analytics"], maxStudents: 100, maxDrives: 5 },
-  { id: "premium", name: "Premium", price: 4999, priceDisplay: "₹4,999/mo", features: ["Up to 1,000 students", "Unlimited drives", "Priority support", "Advanced analytics", "CSV export", "Bulk import"], maxStudents: 1000, maxDrives: -1 },
-  { id: "enterprise", name: "Enterprise", price: 14999, priceDisplay: "₹14,999/mo", features: ["Unlimited students", "Unlimited drives", "Dedicated support", "Custom branding", "API access", "SSO integration", "Smart matching engine"], maxStudents: -1, maxDrives: -1 },
+  { id: "basic", name: "Basic", price: 0, priceDisplay: "Free", features: ["Up to 100 students", "5 active drives", "Email support", "Basic analytics"], maxStudents: PLAN_LIMITS.basic.maxStudents, maxDrives: PLAN_LIMITS.basic.maxDrives },
+  { id: "premium", name: "Premium", price: 4999, priceDisplay: "₹4,999/mo", features: ["Up to 1,000 students", "Unlimited drives", "Priority support", "Advanced analytics", "CSV export", "Bulk import"], maxStudents: PLAN_LIMITS.premium.maxStudents, maxDrives: PLAN_LIMITS.premium.maxDrives },
+  { id: "enterprise", name: "Enterprise", price: 14999, priceDisplay: "₹14,999/mo", features: ["Unlimited students", "Unlimited drives", "Dedicated support", "Custom branding", "API access", "SSO integration", "Smart matching engine"], maxStudents: PLAN_LIMITS.enterprise.maxStudents, maxDrives: PLAN_LIMITS.enterprise.maxDrives },
 ];
 
 export async function billingRoutes(fastify: FastifyInstance) {
+  // #3 — Auth + tenant guard on all billing routes
+  fastify.addHook("onRequest", fastify.authenticate);
+  fastify.addHook("onRequest", fastify.tenantGuard);
+
   fastify.get("/plans", async (_req, reply) => reply.send({ plans: PLANS }));
 
   fastify.get("/subscription", async (req, reply) => {

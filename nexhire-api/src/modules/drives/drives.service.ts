@@ -18,8 +18,11 @@ export async function getDrive(id: string, tenantId: string) {
 }
 
 export async function createDrive(tenantId: string, input: CreateDriveInput) {
+  // #7 — Verify company belongs to same tenant
+  const company = await prisma.company.findUnique({ where: { id: input.companyId } });
+  if (!company || company.tenantId !== tenantId) throw new NotFoundError("Company");
   const rounds = (input.rounds || []).map((r) => ({ ...r, id: uuid() }));
-  return prisma.drive.create({ data: { tenantId, companyId: input.companyId, title: input.title, description: input.description, branches: input.branches, minCgpa: input.minCgpa, maxBacklogs: input.maxBacklogs, packageLpa: input.packageLpa, startDate: new Date(input.startDate), endDate: new Date(input.endDate), rounds, status: input.status } });
+  return prisma.drive.create({ data: { tenantId, companyId: input.companyId, title: input.title.slice(0, 200), description: input.description?.slice(0, 2000), branches: input.branches, minCgpa: input.minCgpa, maxBacklogs: input.maxBacklogs, packageLpa: input.packageLpa, startDate: new Date(input.startDate), endDate: new Date(input.endDate), rounds, status: input.status } });
 }
 
 export async function updateDrive(id: string, tenantId: string, input: UpdateDriveInput) {

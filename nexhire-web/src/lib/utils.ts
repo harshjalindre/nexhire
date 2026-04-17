@@ -5,8 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(date));
+// #19 — Null-safe date formatting
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  try { return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(date)); }
+  catch { return "—"; }
 }
 
 export function formatCurrency(amount: number): string {

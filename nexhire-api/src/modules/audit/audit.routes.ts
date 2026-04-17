@@ -3,6 +3,9 @@ import { prisma } from "../../config/prisma.js";
 import { getPagination, paginatedResponse } from "../../utils/pagination.js";
 
 export async function auditRoutes(fastify: FastifyInstance) {
+  fastify.addHook("onRequest", fastify.authenticate);
+  fastify.addHook("onRequest", fastify.tenantGuard);
+
   fastify.get("/", async (req, reply) => {
     if (!["college_admin", "super_admin"].includes(req.currentUser.role)) return reply.code(403).send({ message: "Forbidden" });
     const query = req.query as Record<string, string>;

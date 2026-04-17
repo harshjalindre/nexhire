@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
   REDIS_URL: z.string().default(""),
   RESEND_API_KEY: z.string().default(""),
+  FRONTEND_URL: z.string().default("http://localhost:5173"),
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default("0.0.0.0"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
