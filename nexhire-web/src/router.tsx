@@ -21,19 +21,29 @@ const ProfilePage = lazy(() => import("@/pages/student/ProfilePage"));
 const ResumePage = lazy(() => import("@/pages/student/ResumePage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const AuditTrailPage = lazy(() => import("@/pages/college/AuditTrailPage"));
+const BillingPage = lazy(() => import("@/pages/college/BillingPage"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
+const TenantSignupPage = lazy(() => import("@/pages/auth/TenantSignupPage"));
+const TermsPage = lazy(() => import("@/pages/legal/TermsPage"));
+const PrivacyPage = lazy(() => import("@/pages/legal/PrivacyPage"));
+const RecruiterDashboard = lazy(() => import("@/pages/recruiter/RecruiterDashboard"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
 }
 
 export const router = createBrowserRouter([
-  { path: "/", element: <Navigate to="/auth/login" replace /> },
+  { path: "/", element: <Lazy><LandingPage /></Lazy> },
+  { path: "/terms", element: <Lazy><TermsPage /></Lazy> },
+  { path: "/privacy", element: <Lazy><PrivacyPage /></Lazy> },
   {
     path: "/auth",
     element: <AuthLayout />,
     children: [
       { path: "login", element: <Lazy><LoginPage /></Lazy> },
       { path: "signup", element: <Lazy><SignupPage /></Lazy> },
+      { path: "signup/tenant", element: <Lazy><TenantSignupPage /></Lazy> },
     ],
   },
   {
@@ -41,15 +51,21 @@ export const router = createBrowserRouter([
     children: [
       { path: "/admin", element: <RoleGuard allowedRoles={[Role.SUPER_ADMIN]}><Lazy><AdminDashboard /></Lazy></RoleGuard> },
       { path: "/admin/tenants", element: <RoleGuard allowedRoles={[Role.SUPER_ADMIN]}><Lazy><TenantManagement /></Lazy></RoleGuard> },
+      { path: "/admin/audit", element: <RoleGuard allowedRoles={[Role.SUPER_ADMIN]}><Lazy><AuditTrailPage /></Lazy></RoleGuard> },
       { path: "/college", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><CollegeDashboard /></Lazy></RoleGuard> },
       { path: "/college/drives", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><DriveManagement /></Lazy></RoleGuard> },
       { path: "/college/companies", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><CompanyManagement /></Lazy></RoleGuard> },
       { path: "/college/students", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><StudentManagement /></Lazy></RoleGuard> },
+      { path: "/college/audit", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><AuditTrailPage /></Lazy></RoleGuard> },
+      { path: "/college/billing", element: <RoleGuard allowedRoles={[Role.COLLEGE_ADMIN]}><Lazy><BillingPage /></Lazy></RoleGuard> },
       { path: "/student", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><StudentDashboard /></Lazy></RoleGuard> },
       { path: "/student/drives", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><DriveListingPage /></Lazy></RoleGuard> },
       { path: "/student/applications", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ApplicationsPage /></Lazy></RoleGuard> },
       { path: "/student/profile", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ProfilePage /></Lazy></RoleGuard> },
       { path: "/student/resume", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ResumePage /></Lazy></RoleGuard> },
+      { path: "/recruiter", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><RecruiterDashboard /></Lazy></RoleGuard> },
+      { path: "/recruiter/drives", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><DriveManagement /></Lazy></RoleGuard> },
+      { path: "/recruiter/applications", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><ApplicationsPage /></Lazy></RoleGuard> },
       { path: "/notifications", element: <Lazy><NotificationsPage /></Lazy> },
       { path: "/settings", element: <Lazy><SettingsPage /></Lazy> },
     ],
