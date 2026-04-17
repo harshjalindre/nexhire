@@ -12,7 +12,7 @@ export async function studentRoutes(fastify: FastifyInstance) {
     const where: Record<string, unknown> = { tenantId: req.tenantId };
     if (query.branch) where.branch = query.branch;
     if (query.placementStatus) where.placementStatus = query.placementStatus;
-    if (query.search) where.user = { name: { contains: query.search } };
+    if (query.search) where.user = { OR: [{ name: { contains: query.search, mode: "insensitive" } }, { email: { contains: query.search, mode: "insensitive" } }] };
     const [data, total] = await Promise.all([prisma.student.findMany({ where, include: { user: { select: { name: true, email: true, avatar: true } } }, orderBy: { createdAt: "desc" }, skip: pagination.skip, take: pagination.limit }), prisma.student.count({ where })]);
     const mapped = data.map((s) => ({ id: s.id, userId: s.userId, name: s.user.name, email: s.user.email, avatar: s.user.avatar, branch: s.branch, year: s.year, cgpa: s.cgpa, backlogs: s.backlogs, skills: s.skills as string[], placementStatus: s.placementStatus, profileCompletion: s.profileCompletion, createdAt: s.createdAt.toISOString() }));
     return reply.send(paginatedResponse(mapped, total, pagination));
