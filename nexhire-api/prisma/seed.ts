@@ -9,8 +9,10 @@ async function main() {
   const systemTenant = await prisma.tenant.upsert({ where: { code: "SYSTEM" }, update: {}, create: { name: "NexHire System", code: "SYSTEM", tier: "enterprise", status: "active" } });
   await prisma.user.upsert({ where: { tenantId_email: { tenantId: systemTenant.id, email: "admin@nexhire.com" } }, update: {}, create: { tenantId: systemTenant.id, name: "Super Admin", email: "admin@nexhire.com", password, role: "super_admin" } });
   await prisma.user.upsert({ where: { tenantId_email: { tenantId: tenant.id, email: "admin@mitpune.edu" } }, update: {}, create: { tenantId: tenant.id, name: "Dr. Priya Mehta", email: "admin@mitpune.edu", password, role: "college_admin" } });
-  const google = await prisma.company.create({ data: { tenantId: tenant.id, name: "Google", industry: "Technology", website: "https://google.com", contactName: "Sundar P.", contactEmail: "recruit@google.com" } });
-  const microsoft = await prisma.company.create({ data: { tenantId: tenant.id, name: "Microsoft", industry: "Technology", website: "https://microsoft.com", contactName: "Satya N.", contactEmail: "recruit@microsoft.com" } });
+  let google = await prisma.company.findFirst({ where: { tenantId: tenant.id, name: "Google" } });
+  if (!google) google = await prisma.company.create({ data: { tenantId: tenant.id, name: "Google", industry: "Technology", website: "https://google.com", contactName: "Sundar P.", contactEmail: "recruit@google.com" } });
+  let microsoft = await prisma.company.findFirst({ where: { tenantId: tenant.id, name: "Microsoft" } });
+  if (!microsoft) microsoft = await prisma.company.create({ data: { tenantId: tenant.id, name: "Microsoft", industry: "Technology", website: "https://microsoft.com", contactName: "Satya N.", contactEmail: "recruit@microsoft.com" } });
   const students = [
     { name: "Rahul Kumar", email: "rahul@mitpune.edu", branch: "Computer Science", cgpa: 8.5, skills: ["React", "Node.js", "Python"] },
     { name: "Priya Sharma", email: "priya@mitpune.edu", branch: "Computer Science", cgpa: 9.1, skills: ["TypeScript", "Go", "Docker"] },
@@ -26,9 +28,11 @@ async function main() {
   const recruiterUser = await prisma.user.upsert({ where: { tenantId_email: { tenantId: tenant.id, email: "recruiter@google.com" } }, update: {}, create: { tenantId: tenant.id, name: "Recruiter Gupta", email: "recruiter@google.com", password, role: "recruiter" } });
   const recruiter = await prisma.recruiter.upsert({ where: { userId: recruiterUser.id }, update: {}, create: { userId: recruiterUser.id, tenantId: tenant.id, companyId: google.id, designation: "HR Manager", phone: "+91 98765 43210" } });
 
-  // Drives created by recruiter
-  const drive1 = await prisma.drive.create({ data: { tenantId: tenant.id, companyId: google.id, createdById: recruiter.id, title: "SDE Intern 2026", description: "Google SDE Internship for Summer 2026.", branches: ["Computer Science", "Information Technology"], minCgpa: 8.0, maxBacklogs: 0, packageLpa: 25, startDate: new Date("2026-04-15"), endDate: new Date("2026-05-15"), rounds: [{ id: "r1", name: "Online Assessment", type: "coding" }, { id: "r2", name: "Technical Round", type: "technical" }, { id: "r3", name: "HR Round", type: "hr" }], status: "active" } });
-  await prisma.drive.create({ data: { tenantId: tenant.id, companyId: microsoft.id, title: "PM Intern 2026", description: "Microsoft PM Internship.", branches: ["Computer Science", "IT", "Electronics"], minCgpa: 7.5, maxBacklogs: 1, packageLpa: 22, startDate: new Date("2026-04-20"), endDate: new Date("2026-05-20"), rounds: [{ id: "r1", name: "Case Study", type: "aptitude" }, { id: "r2", name: "PM Interview", type: "technical" }], status: "active" } });
+  // Drives (idempotent)
+  let drive1 = await prisma.drive.findFirst({ where: { tenantId: tenant.id, title: "SDE Intern 2026" } });
+  if (!drive1) drive1 = await prisma.drive.create({ data: { tenantId: tenant.id, companyId: google.id, createdById: recruiter.id, title: "SDE Intern 2026", description: "Google SDE Internship for Summer 2026.", branches: ["Computer Science", "Information Technology"], minCgpa: 8.0, maxBacklogs: 0, packageLpa: 25, startDate: new Date("2026-04-15"), endDate: new Date("2026-05-15"), rounds: [{ id: "r1", name: "Online Assessment", type: "coding" }, { id: "r2", name: "Technical Round", type: "technical" }, { id: "r3", name: "HR Round", type: "hr" }], status: "active" } });
+  let drive2 = await prisma.drive.findFirst({ where: { tenantId: tenant.id, title: "PM Intern 2026" } });
+  if (!drive2) await prisma.drive.create({ data: { tenantId: tenant.id, companyId: microsoft.id, title: "PM Intern 2026", description: "Microsoft PM Internship.", branches: ["Computer Science", "IT", "Electronics"], minCgpa: 7.5, maxBacklogs: 1, packageLpa: 22, startDate: new Date("2026-04-20"), endDate: new Date("2026-05-20"), rounds: [{ id: "r1", name: "Case Study", type: "aptitude" }, { id: "r2", name: "PM Interview", type: "technical" }], status: "active" } });
 
   // Sample applications for recruiter to review
   for (const s of students) {

@@ -2,6 +2,7 @@
   "name": "nexhire",
   "private": true,
   "scripts": {
+    "predev": "cd nexhire-api && npx prisma db push && npx tsx prisma/seed.ts",
     "dev": "concurrently -n API,WEB -c blue,green \"cd nexhire-api && npx tsx watch src/server.ts\" \"cd nexhire-web && npx vite --host\"",
     "dev:api": "cd nexhire-api && npx tsx watch src/server.ts",
     "dev:web": "cd nexhire-web && npx vite --host"
