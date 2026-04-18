@@ -1,0 +1,12 @@
+{
+  "name": "nexhire",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c blue,green \"cd nexhire-api && npx tsx watch src/server.ts\" \"cd nexhire-web && npx vite --host\"",
+    "dev:api": "cd nexhire-api && npx tsx watch src/server.ts",
+    "dev:web": "cd nexhire-web && npx vite --host"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
