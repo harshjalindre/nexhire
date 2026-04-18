@@ -33,8 +33,7 @@ export const NAV_ITEMS = {
   ],
   [Role.RECRUITER]: [
     { label: "Dashboard", path: "/recruiter", icon: LayoutDashboard },
-    { label: "Drives", path: "/recruiter/drives", icon: Briefcase },
-    { label: "Applications", path: "/recruiter/applications", icon: FileText },
+    { label: "My Drives", path: "/recruiter/drives", icon: Briefcase },
     { label: "Settings", path: "/settings", icon: Settings },
   ],
 };

@@ -45,11 +45,29 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
   tenant        Tenant         @relation(fields: [tenantId], references: [id])
   student       Student?
+  recruiter     Recruiter?
   notifications Notification[]
   auditLogs     AuditLog[]
   @@unique([tenantId, email])
   @@index([tenantId])
   @@map("users")
+}
+
+model Recruiter {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  tenantId    String   @map("tenant_id")
+  companyId   String?  @map("company_id")
+  designation String?  @db.VarChar(100)
+  phone       String?  @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id])
+  company     Company? @relation(fields: [companyId], references: [id])
+  drives      Drive[]
+  @@index([tenantId])
+  @@index([companyId])
+  @@map("recruiters")
 }
 
 model Student {
@@ -89,8 +107,9 @@ model Company {
   contactPhone String? @map("contact_phone")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  tenant Tenant  @relation(fields: [tenantId], references: [id])
-  drives Drive[]
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  drives     Drive[]
+  recruiters Recruiter[]
   @@index([tenantId])
   @@map("companies")
 }
@@ -99,6 +118,7 @@ model Drive {
   id          String   @id @default(uuid())
   tenantId    String   @map("tenant_id")
   companyId   String   @map("company_id")
+  createdById String?  @map("created_by_id")
   title       String
   description String   @db.Text
   branches    Json     @default("[]")
@@ -113,9 +133,11 @@ model Drive {
   updatedAt   DateTime @updatedAt @map("updated_at")
   tenant       Tenant        @relation(fields: [tenantId], references: [id])
   company      Company       @relation(fields: [companyId], references: [id])
+  createdBy    Recruiter?    @relation(fields: [createdById], references: [id])
   applications Application[]
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([createdById])
   @@map("drives")
 }
 

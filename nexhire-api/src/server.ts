@@ -24,6 +24,7 @@ import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 import { billingRoutes } from "./modules/billing/billing.routes.js";
 import { bulkImportRoutes } from "./modules/students/bulk-import.routes.js";
 import { auditRoutes } from "./modules/audit/audit.routes.js";
+import { recruiterRoutes } from "./modules/recruiter/recruiter.routes.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -70,6 +71,7 @@ export async function buildServer() {
   await app.register(billingRoutes, { prefix: "/api/billing" });
   await app.register(bulkImportRoutes, { prefix: "/api/students" });
   await app.register(auditRoutes, { prefix: "/api/audit-logs" });
+  await app.register(recruiterRoutes, { prefix: "/api/recruiter" });
 
   // #4 — WebSocket with JWT auth
   app.register(async function wsRoutes(fastify) {

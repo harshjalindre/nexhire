@@ -28,6 +28,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2"><GraduationCap className="h-7 w-7 text-primary" /><span className="text-xl font-bold">NexHire</span></div>
           <div className="flex items-center gap-3">
             <Link to="/auth/login"><Button variant="ghost">Login</Button></Link>
+            <Link to="/auth/signup/recruiter"><Button variant="outline">I'm a Recruiter</Button></Link>
             <Link to="/auth/signup/tenant"><Button>Register College <ArrowRight className="h-4 w-4 ml-1" /></Button></Link>
           </div>
         </div>

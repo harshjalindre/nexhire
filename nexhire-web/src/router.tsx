@@ -28,6 +28,10 @@ const TenantSignupPage = lazy(() => import("@/pages/auth/TenantSignupPage"));
 const TermsPage = lazy(() => import("@/pages/legal/TermsPage"));
 const PrivacyPage = lazy(() => import("@/pages/legal/PrivacyPage"));
 const RecruiterDashboard = lazy(() => import("@/pages/recruiter/RecruiterDashboard"));
+const RecruiterDrives = lazy(() => import("@/pages/recruiter/RecruiterDrives"));
+const ApplicantReview = lazy(() => import("@/pages/recruiter/ApplicantReview"));
+const CreateDrive = lazy(() => import("@/pages/recruiter/CreateDrive"));
+const RecruiterSignupPage = lazy(() => import("@/pages/auth/RecruiterSignupPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
@@ -44,6 +48,7 @@ export const router = createBrowserRouter([
       { path: "login", element: <Lazy><LoginPage /></Lazy> },
       { path: "signup", element: <Lazy><SignupPage /></Lazy> },
       { path: "signup/tenant", element: <Lazy><TenantSignupPage /></Lazy> },
+      { path: "signup/recruiter", element: <Lazy><RecruiterSignupPage /></Lazy> },
     ],
   },
   {
@@ -64,8 +69,9 @@ export const router = createBrowserRouter([
       { path: "/student/profile", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ProfilePage /></Lazy></RoleGuard> },
       { path: "/student/resume", element: <RoleGuard allowedRoles={[Role.STUDENT]}><Lazy><ResumePage /></Lazy></RoleGuard> },
       { path: "/recruiter", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><RecruiterDashboard /></Lazy></RoleGuard> },
-      { path: "/recruiter/drives", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><DriveManagement /></Lazy></RoleGuard> },
-      { path: "/recruiter/applications", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><ApplicationsPage /></Lazy></RoleGuard> },
+      { path: "/recruiter/drives", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><RecruiterDrives /></Lazy></RoleGuard> },
+      { path: "/recruiter/drives/new", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><CreateDrive /></Lazy></RoleGuard> },
+      { path: "/recruiter/drives/:driveId/applicants", element: <RoleGuard allowedRoles={[Role.RECRUITER]}><Lazy><ApplicantReview /></Lazy></RoleGuard> },
       { path: "/notifications", element: <Lazy><NotificationsPage /></Lazy> },
       { path: "/settings", element: <Lazy><SettingsPage /></Lazy> },
     ],
